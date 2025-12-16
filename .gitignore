@@ -1,0 +1,86 @@
+# Dependencies
+node_modules/
+**/node_modules/
+package-lock.json
+**/package-lock.json
+
+# Build outputs
+dist/
+build/
+**/dist/
+**/build/
+*.log
+
+# Chrome binaries (không cần commit - quá lớn)
+Chrome-bin/
+chrome/
+*.exe
+*.dll
+
+# Test files và temporary files
+code_test_nhan/
+*.pyc
+__pycache__/
+*.tmp
+*.temp
+ruyi_live_*/
+proxy_auth_plugin_*/
+
+# Database files (chứa dữ liệu nhạy cảm - không commit)
+**/database.json
+**/profiles.json
+**/proxies.json
+
+# Environment và config files (có thể chứa secrets)
+.env
+.env.local
+.env.*.local
+*.key
+*.pem
+
+# OS files
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# IDE files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Electron
+out/
+*.asar
+
+# Logs
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Runtime data
+pids/
+*.pid
+*.seed
+*.pid.lock
+
+# Coverage directory used by tools like istanbul
+coverage/
+.nyc_output/
+
+# Optional npm cache directory
+.npm
+
+# Optional eslint cache
+.eslintcache
+
+# Temporary folders
+tmp/
+temp/
+
+# User data directories (tạo khi chạy app)
+user-data-*/
+ruyi_live_*/

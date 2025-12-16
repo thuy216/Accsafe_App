@@ -1,0 +1,5 @@
+{
+  "name": "Accsafe",
+  "description": "Secure Browser Profile & Proxy Manager built with Electron and React.",
+  "requestFramePermissions": []
+}

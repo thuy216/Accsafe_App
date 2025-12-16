@@ -1,0 +1,26 @@
+{
+  "name": "accsafe-backend-api",
+  "version": "1.0.0",
+  "description": "Backend API server for AccSafe application",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "nodemon server.js"
+  },
+  "keywords": [
+    "accsafe",
+    "api",
+    "backend",
+    "express"
+  ],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "cors": "^2.8.5",
+    "express": "^4.18.2",
+    "https-proxy-agent": "^7.0.6"
+  },
+  "devDependencies": {
+    "nodemon": "^3.0.2"
+  }
+}

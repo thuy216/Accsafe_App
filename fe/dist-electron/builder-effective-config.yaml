@@ -1,0 +1,42 @@
+directories:
+  output: dist-electron
+  buildResources: build
+appId: com.accsafe.app
+productName: AccSafe
+files:
+  - filter:
+      - dist/**/*
+      - main.js
+      - package.json
+      - node_modules/**/*
+      - public/logo.png
+extraResources:
+  - from: ../Chrome-bin
+    to: Chrome-bin
+    filter:
+      - '**/*'
+  - from: ../code_test_nhan
+    to: code_test_nhan
+    filter:
+      - '**/*'
+  - from: public/logo.png
+    to: logo.png
+win:
+  target:
+    - target: nsis
+      arch:
+        - x64
+    - target: portable
+      arch:
+        - x64
+  icon: public/logo.png
+  artifactName: ${productName}-${version}-${arch}.${ext}
+nsis:
+  oneClick: false
+  allowToChangeInstallationDirectory: true
+  createDesktopShortcut: true
+  createStartMenuShortcut: true
+  shortcutName: AccSafe
+portable:
+  artifactName: ${productName}-${version}-portable.${ext}
+electronVersion: 29.4.6

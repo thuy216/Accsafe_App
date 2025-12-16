@@ -1,0 +1,23 @@
+@"
+# Node modules
+node_modules/
+
+# Build files
+dist/
+build/
+
+# Environment
+.env
+.env.local
+
+# Database
+database.json
+
+# OS
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/
+.idea/
+"@ | Out-File -FilePath .gitignore -Encoding utf8

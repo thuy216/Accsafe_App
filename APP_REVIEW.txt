@@ -1,0 +1,80 @@
+App Review – AccSafe
+====================
+
+1) Ngôn ngữ & Framework
+- Frontend/Electron: TypeScript + React 18, Vite 5, TailwindCSS, Electron 29, lucide-react (icons).
+- Backend: Node.js + Express 4.
+- Automation/Browser: Packaged Chrome binary (Chrome-bin) + helper script (code_test_nhan/tes.js), uses child_process, Playwright-like launch logic.
+
+2) Thư mục & Vai trò chính
+- fe/: Mã nguồn React + Electron renderer, build với Vite.
+  - App.tsx: Shell chính, routing view, lazy-load, i18n, state global (profiles, proxies, chat), toast, auth.
+  - main.js: Electron main process, tạo BrowserWindow, load dist/index.html, quản lý IPC profile start/stop, kill Chrome processes, resolve đường dẫn Chrome-bin & tes.js (packaged vs dev).
+  - components/: Sidebar (logo, menu, logout), TitleBar (window controls), ChatWidget (user chat), UIComponents (Button/Modal/Toast).
+  - views/: màn hình chức năng
+    - AuthView: login/register, password policy check.
+    - ProfileView: CRUD profile, random config, run/test profile, validate bắt buộc.
+    - ProxyView: CRUD proxy, check location/status.
+    - AutomationView: thao tác tự động (test all profiles, vv.).
+    - SupportView: trang hỗ trợ.
+    - SettingsView: đổi ngôn ngữ, theme.
+    - AdminChatView: admin xem/xóa cuộc trò chuyện.
+    - AdminUsersView: admin xem/xóa user.
+  - services/api.ts: client REST; auth, profiles, proxies, chats, users; lấy token từ localStorage (auth_token); config URL qua config/api.config.ts.
+  - services/browserLauncher.js, fingerprintBuilder.ts, proxyChecker.ts, proxyLocationChecker.ts: tiện ích liên quan browser/proxy/fingerprint.
+  - constants.ts: TRANSLATIONS, mock data (GPU, RAM, CPU options…), i18n keys.
+  - config/api.config.ts, proxy.config.ts: cấu hình endpoint API và proxy mặc định.
+  - vite.config.ts: cấu hình Vite + code splitting (manualChunks).
+  - build*.bat: script build frontend/electron.
+- server/: API Express + storage file JSON.
+  - server.js: định nghĩa routes auth, profiles, proxies, chats, users (admin), health; đọc/ghi database.json, profiles.json, proxies.json, chats.json; middleware auth.
+  - auth-middleware.js: xác thực đơn giản từ token fake-jwt.
+  - ecosystem.config.js: cấu hình PM2.
+  - check.sh, START_SERVER.sh, DEPLOY_FIX.sh, FIX_CONNECTION.sh: script tiện ích.
+- Chrome-bin/: Chrome portable được bundle vào app (extraResources) để bảo đảm luôn có binary chạy profile.
+- code_test_nhan/: Script hỗ trợ chạy Chrome với fingerprint/proxy.
+  - tes.js: được spawn từ Electron main, nhận profile/proxy params, tạo user-data-dir ruyi_live_<id>, khởi chạy Chrome-bin/chrome.exe.
+  - proxy_auth_plugin/: extension tạo auth cho proxy.
+  - sample profile dirs (ruyi_profile_*), test scripts (test_proxy.js, test.py…).
+
+3) Quy trình hoạt động của app
+- Electron main (main.js) khởi tạo cửa sổ, load frontend (dist/index.html khi packaged).
+- Người dùng login/register → frontend lưu auth_token & accsafe_user (localStorage).
+- App.tsx gọi API (services/api.ts) để load profiles/proxies/chats. Admin sẽ gọi getAllChatSessions & /api/users.
+- Chạy profile: Renderer gửi IPC đến main.js → main spawn Node child process chạy code_test_nhan/tes.js với params (profileId, proxy, fingerprint, path Chrome-bin). tes.js tạo user-data-dir riêng và khởi chạy chrome.exe. main.js theo dõi PIDs, hỗ trợ kill profile/kill all.
+- Proxy kiểm tra location/status qua proxyLocationChecker.ts (HTTP call) và cập nhật UI/server.
+- Chat: user có 1 session theo email; admin xem/xóa mọi session. Lưu trữ ở server/chats.json.
+
+4) Kết nối server (API)
+- Cấu hình URL: fe/config/api.config.ts (remoteUrl, useLocalServer flag). services/api.ts dùng getApiUrl/getAvailableApiUrl; auth API cố định remoteUrl.
+- Auth token: Bearer fake-jwt-{timestamp}-{email} lưu trong localStorage auth_token; backend parse để kiểm tra admin.
+- Tất cả dữ liệu (profiles, proxies, chats, users) nằm trên backend (JSON files) → frontend không lưu cục bộ ngoài token/user info.
+- Health check: backend có middleware log; có thể thêm /api/health (xem server.js nếu đã khai báo).
+
+5) Kết nối thư mục Chrome-bin, code_test_nhan và fe
+- Electron builder (fe/package.json) copy Chrome-bin/ và code_test_nhan/ vào resources khi build. main.js trong packaged mode trỏ tới:
+  - Chrome: process.resourcesPath/Chrome-bin/chrome.exe
+  - Script: process.resourcesPath/code_test_nhan/tes.js
+- Dev mode trỏ tới ../Chrome-bin và ../code_test_nhan từ fe/.
+- tes.js sử dụng Chrome-bin và tạo user data dir ruyi_live_<profileId> trong cùng thư mục script (hoặc dir được truyền qua env, tùy phiên bản sửa đổi).
+- Frontend (fe) gọi IPC start/stop profile → main.js → spawn tes.js → tes.js gọi Chrome-bin.
+
+6) API chính (server/server.js)
+- Auth: POST /api/auth/register, POST /api/auth/login (fake-jwt token).
+- Profiles: GET /api/profiles?userId=..., POST /api/profiles, PUT /api/profiles/:id, DELETE /api/profiles/:id. Lưu tại profiles.json.
+- Proxies: GET/POST/PUT/DELETE /api/proxies tương tự; lưu proxies.json.
+- Chats: GET /api/chats/:userId (user), GET /api/chats (admin all), POST /api/chats/:userId (append message), DELETE /api/chats/:userId (admin delete). Lưu chats.json.
+- Users (admin): GET /api/users, DELETE /api/users/:email (cấm xóa admin, đồng thời xóa profiles/proxies/chats của user).
+- Health/log: middleware log mỗi request; CORS open.
+
+7) Build & Deploy tóm tắt
+- Frontend build: npm run build (Vite, output dist/). Electron build: npm run build:win → dist-electron/ AccSafe-*.exe (nsis installer) + portable.
+- Backend: node server.js (hoặc pm2 start server.js --name accsafe-api). Lưu data JSON cùng thư mục server/.
+
+8) Điểm cần lưu ý
+- Token không phải JWT thật; chỉ format fake-jwt-{timestamp}-{email}. Admin check dựa trên email trong token + role trong database.json.
+- Dữ liệu người dùng (profiles/proxies/chats/users) lưu file JSON, không có DB riêng.
+- Khi packaged, đảm bảo đường dẫn writable cho user-data-dir của Chrome (nếu cần, chỉnh tes.js/main.js để dùng app.getPath('userData')).
+
+File này nhằm mục đích overview nhanh về kiến trúc, công nghệ và cách các phần nối với nhau.***
+
